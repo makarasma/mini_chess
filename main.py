@@ -14,7 +14,6 @@ from kivy.graphics import Rectangle, Color
 import itertools
 
 
-
 class MainWindow(Screen):
     def exit_game(self):
         sys.exit()
@@ -22,136 +21,94 @@ class MainWindow(Screen):
 class GameWindow(Screen):
     pass
 
-# class ChessManager():
-#     def __init__(self, **kwargs):
-#         super(ChessManager, self).__init__(**kwargs)
-#         self.pre_coords = list(range(1, 7))
-#         self.coords = list(itertools.product(self.pre_coords, self.pre_coords))
-#         self.start_coords = {
-#             (1, 1): ("bishop", "black"), (1, 2): ("knight", "black"), (1, 3): ("rook", "black"),
-#             (1, 4): ("king", "black"), (1, 5): ("knight", "black"), (1, 6): ("bishop", "black"),
-#             (2, 1): ("pawn", "black"), (2, 2): ("pawn", "black"), (2, 3): ("pawn", "black"), (2, 4): ("pawn", "black"),
-#             (2, 5): ("pawn", "black"), (2, 6): ("pawn", "black"), (6, 1): ("bishop", "white"),
-#             (6, 2): ("knight", "white"), (6, 3): ("rook", "white"), (6, 4): ("king", "white"),
-#             (6, 5): ("knight", "white"), (6, 6): ("bishop", "white"), (5, 1): ("pawn", "white"),
-#             (5, 2): ("pawn", "white"), (5, 3): ("pawn", "white"), (5, 4): ("pawn", "white"), (5, 5): ("pawn", "white"),
-#             (5, 6): ("pawn", "white")
-#         }
-#         self.cells = self.fill_board()
-#         self.piece_select = False
-#         self.piece_selected = None
-#
-#         def fill_board(self):
-#             chess_cells = []
-#             move_cells = []
-#             for coord in self.coords:
-#                 if coord in self.start_coords.keys():
-#                     anchor = Cell(coord=coord, piece=self.start_coords[coord], occupied=True)
-#                     chess_cells.append(anchor.chessCell)
-#                     move_cells.append(anchor.moveCell)
-#                     self.add_widget(anchor)
-#                 else:
-#                     anchor = Cell(coord=coord)
-#                     chess_cells.append(anchor.chessCell)
-#                     move_cells.append(anchor.moveCell)
-#                     self.add_widget(anchor)
-#             return (chess_cells, move_cells)
-#
-#         def show_moves(self):
-#             for move in self.moves:
-#                 for cell in self.cells[1]:
-#                     if cell.coord == move:
-#                         cell.opacity = 0.7
-#
-#         def deselect(self):
-#             for cell in self.cells[1]:
-#                 cell.opacity = 0
-#
-#         def attack(self, cell1, cell2):
-#             pass
+class ChessManager():
+    def __init__(self, **kwargs):
+        super(ChessManager, self).__init__(**kwargs)
+        self.pre_coords = list(range(1, 7))
+        self.coords = list(itertools.product(self.pre_coords, self.pre_coords))
+        self.start_coords = {
+            (1, 1): ("bishop", "black"), (1, 2): ("knight", "black"), (1, 3): ("rook", "black"),
+            (1, 4): ("king", "black"), (1, 5): ("knight", "black"), (1, 6): ("bishop", "black"),
+            (2, 1): ("pawn", "black"), (2, 2): ("pawn", "black"), (2, 3): ("pawn", "black"), (2, 4): ("pawn", "black"),
+            (2, 5): ("pawn", "black"), (2, 6): ("pawn", "black"), (6, 1): ("bishop", "white"),
+            (6, 2): ("knight", "white"), (6, 3): ("rook", "white"), (6, 4): ("king", "white"),
+            (6, 5): ("knight", "white"), (6, 6): ("bishop", "white"), (5, 1): ("pawn", "white"),
+            (5, 2): ("pawn", "white"), (5, 3): ("pawn", "white"), (5, 4): ("pawn", "white"), (5, 5): ("pawn", "white"),
+            (5, 6): ("pawn", "white")
+        }
+        self.figures = None
+        self.move_cells = None
+        self.moves = None
+        self.piece_select = False
+        self.piece_selected = None
+
+    def show_moves(self):
+        for move in self.moves:
+            for cell in self.move_cells:
+                if cell.coord == move:
+                    cell.opacity = 0.7
+
+    def deselect(self):
+        for cell in self.move_cells:
+            cell.opacity = 0
+
+    def attack(self, cell1, cell2):
+        pass
 
 class ChessGrid(GridLayout):
     def __init__(self, **kwargs):
         super(ChessGrid, self).__init__(**kwargs)
         self.cols = 6
-        self.pre_coords = list(range(1,7))
-        self.coords = list(itertools.product(self.pre_coords, self.pre_coords))
-        self.start_coords = {
-            (1, 1): ("bishop","black"), (1, 2): ("knight", "black"), (1, 3): ("rook", "black"),
-            (1, 4): ("king", "black"), (1, 5): ("knight", "black"), (1, 6) : ("bishop", "black"),
-            (2, 1): ("pawn", "black"), (2, 2): ("pawn", "black"), (2, 3): ("pawn", "black"), (2, 4): ("pawn", "black"),
-            (2, 5): ("pawn", "black"), (2, 6): ("pawn", "black"), (6, 1): ("bishop", "white"),
-            (6, 2): ("knight", "white"), (6, 3): ("rook", "white"), (6, 4): ("king", "white"),
-            (6, 5): ("knight", "white"), (6, 6): ("bishop", "white"), (5, 1): ("pawn", "white"),
-            (5, 2): ("pawn","white"), (5, 3): ("pawn", "white"), (5, 4): ("pawn", "white"), (5, 5): ("pawn", "white"),
-            (5, 6): ("pawn", "white")
-        }
-        self.cells = self.fill_board()
-        self.piece_select = False
-        self.piece_selected = None
+        self.fill_board()
 
     def fill_board(self):
-        chess_cells = []
+        figure_cells = []
         move_cells = []
-        for coord in self.coords:
-            if coord in self.start_coords.keys():
-                anchor = Cell(coord=coord, piece=self.start_coords[coord], occupied=True)
-                chess_cells.append(anchor.chessCell)
+        for coord in manager.coords:
+            if coord in manager.start_coords.keys():
+                anchor = Cell(coord=coord, piece=manager.start_coords[coord])
+                figure_cells.append(anchor.chessCell)
                 move_cells.append(anchor.moveCell)
                 self.add_widget(anchor)
             else:
                 anchor = Cell(coord=coord)
-                chess_cells.append(anchor.chessCell)
+                figure_cells.append(anchor.chessCell)
                 move_cells.append(anchor.moveCell)
                 self.add_widget(anchor)
-        return (chess_cells, move_cells)
-
-    def show_moves(self):
-        for move in self.moves:
-            for cell in self.cells[1]:
-                if cell.coord == move:
-                    cell.opacity = 0.7
-
-    def deselect(self):
-        for cell in self.cells[1]:
-            cell.opacity = 0
-
-    def attack(self,cell1,cell2):
-        pass
+        manager.figures = figure_cells
+        manager.move_cells = move_cells
 
 class Cell(AnchorLayout):
 
     def __init__(self, coord, piece=None, occupied=False, **kwargs):
         super(Cell, self).__init__(**kwargs)
-        self.chessCell = ChessCell(coord,piece,occupied)
+        self.chessCell = ChessCell(coord,piece)
         self.moveCell = MoveCell(coord)
         self.add_widget(self.moveCell)
         self.add_widget(self.chessCell)
 
-
 class ChessCell(ButtonBehavior, Image):
 
-    def __init__(self, coord, piece=None, occupied=False, **kwargs):
+    def __init__(self, coord, piece=None, **kwargs):
         super(ChessCell, self).__init__(**kwargs)
         self.size_hint = (0.7,0.7)
         self.coord = coord
         self.selected = False
-        self.occupied = occupied
         self.piece = self.get_figure(piece, self.coord) if piece else None
         self.source = self.piece.picture if piece else "pics/empty.png"
 
     def on_press(self):
-        if self.parent.parent.piece_select:
-            self.parent.parent.deselect()
-            self.parent.parent.piece_select = False
-            if self.coord in self.parent.parent.moves:
-                self.parent.parent.attack(self.parent.parent.piece_selected,self.coord)
+        if manager.piece_select:
+            manager.deselect()
+            manager.piece_select = False
+            if self.coord in manager.moves:
+                manager.attack(manager.piece_selected,self.coord)
         else:
             if self.piece:
-                self.parent.parent.piece_select = True
-                self.parent.parent.piece_selected = self.coord
-                self.parent.parent.moves = self.piece.get_moves()
-                self.parent.parent.show_moves()
+                manager.piece_select = True
+                manager.piece_selected = self.coord
+                manager.moves = self.piece.get_moves()
+                manager.show_moves()
 
     def get_figure(self,piece,coord):
         pieces = {
@@ -175,6 +132,7 @@ class MoveCell(ButtonBehavior, Image):
 
 
 kv = Builder.load_file("my.kv")
+manager = ChessManager()
 sm = ScreenManager()
 sm.add_widget(MainWindow(name='main'))
 sm.add_widget(GameWindow(name='game'))
