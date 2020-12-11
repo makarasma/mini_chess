@@ -26,27 +26,6 @@ class ChessFigure():
         subtype = "_".join((self.type,self.side))
         return subtype
 
-    def get_moves(self,coord,figures):
-        init_moves = []
-        if self.side == "white":
-            move = (coord[0] - 1, coord[1])
-        else:
-            move = (coord[0] + 1, coord[1])
-        init_moves.append(move)
-        moves = self.validate_moves(init_moves, figures)
-        init_attack_moves = []
-        if self.side == "white":
-            move1 = (coord[0] - 1, coord[1] + 1)
-            move2 = (coord[0] - 1, coord[1] - 1)
-        else:
-            move1 = (coord[0] + 1, coord[1] + 1)
-            move2 = (coord[0] + 1, coord[1] - 1)
-        init_attack_moves.append(move1)
-        init_attack_moves.append(move2)
-        attack_moves = self.validate_attack_moves(init_attack_moves,figures)
-        result = moves + attack_moves
-        return result
-
     def validate_moves(self,init_moves,figures):
         removes = []
         for move in init_moves:
@@ -81,17 +60,52 @@ class ChessPawn(ChessFigure):
     def __init__(self,**kwargs):
         super(ChessPawn, self).__init__(**kwargs)
 
+    def get_moves(self,coord,figures):
+        init_moves = []
+        if self.side == "white":
+            move = (coord[0] - 1, coord[1])
+        else:
+            move = (coord[0] + 1, coord[1])
+        init_moves.append(move)
+        moves = self.validate_moves(init_moves, figures)
+        init_attack_moves = []
+        if self.side == "white":
+            move1 = (coord[0] - 1, coord[1] + 1)
+            move2 = (coord[0] - 1, coord[1] - 1)
+        else:
+            move1 = (coord[0] + 1, coord[1] + 1)
+            move2 = (coord[0] + 1, coord[1] - 1)
+        init_attack_moves.append(move1)
+        init_attack_moves.append(move2)
+        attack_moves = self.validate_attack_moves(init_attack_moves,figures)
+        result = moves + attack_moves
+        return result
+
 
 class ChessBishop(ChessFigure):
     type = "bishop"
     def __init__(self,**kwargs):
         super(ChessBishop, self).__init__(**kwargs)
 
-
 class ChessKnight(ChessFigure):
     type = "knight"
     def __init__(self,**kwargs):
         super(ChessKnight, self).__init__(**kwargs)
+
+    def get_moves(self,coord,figures):
+        init_moves = []
+        init_moves.append((coord[0] + 2, coord[1] + 1))
+        init_moves.append((coord[0] + 1, coord[1] + 2))
+        init_moves.append((coord[0] - 1, coord[1] + 2))
+        init_moves.append((coord[0] - 2, coord[1] + 1))
+        init_moves.append((coord[0] - 2, coord[1] - 1))
+        init_moves.append((coord[0] - 1, coord[1] - 2))
+        init_moves.append((coord[0] + 1, coord[1] - 2))
+        init_moves.append((coord[0] + 2, coord[1] - 1))
+        attack_moves = self.validate_attack_moves(init_moves,figures)
+        moves = self.validate_moves(init_moves,figures)
+        result = attack_moves + moves
+        return result
 
 class ChessRook(ChessFigure):
     type = "rook"
