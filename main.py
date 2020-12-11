@@ -52,8 +52,17 @@ class ChessManager():
         for cell in self.move_cells:
             cell.opacity = 0
 
-    def attack(self, cell1, cell2):
-        pass
+    def move(self, cell1, cell2):
+        for figure in self.figures:
+            if figure.coord == cell1:
+                piece = figure.piece
+                figure.piece = None
+                figure.source = figure.update_figure()
+        for figure in self.figures:
+            if figure.coord == cell2:
+                figure.piece = piece
+                figure.source = figure.update_figure()
+
 
 class ChessGrid(GridLayout):
     def __init__(self, **kwargs):
@@ -94,33 +103,36 @@ class ChessCell(ButtonBehavior, Image):
         self.size_hint = (0.7,0.7)
         self.coord = coord
         self.selected = False
-        self.piece = self.get_figure(piece, self.coord) if piece else None
-        self.source = self.piece.picture if piece else "pics/empty.png"
+        self.piece = self.get_figure(piece) if piece else None
+        self.source = self.update_figure()
 
     def on_press(self):
         if manager.piece_select:
             manager.deselect()
             manager.piece_select = False
             if self.coord in manager.moves:
-                manager.attack(manager.piece_selected,self.coord)
+                manager.move(manager.piece_selected,self.coord)
         else:
             if self.piece:
                 manager.piece_select = True
                 manager.piece_selected = self.coord
-                manager.moves = self.piece.get_moves()
+                manager.moves = self.piece.get_moves(self.coord)
                 manager.show_moves()
 
-    def get_figure(self,piece,coord):
+    def update_figure(self):
+        picture = self.piece.picture if self.piece else "pics/empty.png"
+        return picture
+
+    def get_figure(self,piece):
         pieces = {
-            "pawn": chessFigures.ChessPawn(side=piece[1], coord=coord),
-            "bishop": chessFigures.ChessBishop(side=piece[1], coord=coord),
-            "knight": chessFigures.ChessKnight(side=piece[1], coord=coord),
-            "rook": chessFigures.ChessRook(side=piece[1], coord=coord),
-            "king": chessFigures.ChessKing(side=piece[1], coord=coord),
-            "queen": chessFigures.ChessQueen(side=piece[1],coord=coord)
+            "pawn": chessFigures.ChessPawn(side=piece[1]),
+            "bishop": chessFigures.ChessBishop(side=piece[1]),
+            "knight": chessFigures.ChessKnight(side=piece[1]),
+            "rook": chessFigures.ChessRook(side=piece[1]),
+            "king": chessFigures.ChessKing(side=piece[1]),
+            "queen": chessFigures.ChessQueen(side=piece[1])
         }
         return pieces[piece[0]]
-
 
 class MoveCell(ButtonBehavior, Image):
     def __init__(self, coord, **kwargs):

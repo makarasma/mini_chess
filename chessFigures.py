@@ -15,22 +15,21 @@ class ChessFigure():
         "queen_black": "pics/queen_black.png"
     }
 
-    def __init__(self, side, coord):
+    def __init__(self, side):
         self.side = side
         self.type = ""
-        self.coord = coord
 
     def get_subtype(self):
         subtype = "_".join((self.type,self.side))
         return subtype
 
-    def get_moves(self):
+    def get_moves(self,coord):
         moves = []
         if self.side == "white":
-            move = (self.coord[0] - 1, self.coord[1])
+            move = (coord[0] - 1, coord[1])
             moves.append(move)
         else:
-            move = (self.coord[0] + 1, self.coord[1])
+            move = (coord[0] + 1, coord[1])
             moves.append(move)
         return moves
 
