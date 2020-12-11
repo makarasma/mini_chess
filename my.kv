@@ -1,0 +1,79 @@
+<MainWindow>:
+    name: "main"
+    FloatLayout:
+        Image:
+            source: 'pics/main.jpg'
+            allow_stretch: True
+            keep_ratio:False
+
+        Label:
+            text: "Welcome to the MiniChess!"
+            size_hint: (0.15, 0.05)
+            pos_hint: {"x":0.425, "top":0.8}
+            font_size: '40sp'
+
+        Button:
+            text: 'Start Game'
+            background_color: (0.1, 0.5, 0.6, 1)
+            size_hint: (0.15, 0.05)
+            pos_hint: {"x":0.425, "top":0.5}
+            on_release: root.manager.current = 'game'
+
+        Button:
+            text: 'Exit Game'
+            background_color: (0.1, 0.5, 0.6, 1)
+            size_hint: (0.15, 0.05)
+            pos_hint: {"x":0.425, "top":0.4}
+            on_release: root.exit_game()
+
+<GameWindow>:
+    name: "game"
+    canvas.before:
+        Color:
+            rgba: 255,102,102,0.2
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+
+        Button:
+            text: 'Menu'
+            background_color: (0.1, 0.5, 0.6, 1)
+            size_hint: (0.15, 0.05)
+            pos_hint: {"x":0.825, "top":0.9}
+            on_release: root.manager.current = 'main'
+
+        Button:
+            text: 'Exit Game'
+            background_color: (0.1, 0.5, 0.6, 1)
+            size_hint: (0.15, 0.05)
+            pos_hint: {"x":0.825, "top":0.8}
+            on_release: root.exit_game()
+
+        Label:
+            text: "Hi"
+            pos_hint: {"x":0.8, "top":0.5}
+            size_hint: (0.15, 0.05)
+
+        FloatLayout:
+            size_hint: (0.8, 1)
+
+            Image:
+                source: 'pics/board.jpg'
+                allow_stretch: True
+                keep_ratio:False
+
+            ChessGrid:
+
+
+
+
+
+
+
+
+
+
+
+
