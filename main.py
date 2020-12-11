@@ -44,24 +44,26 @@ class ChessManager():
 
     def show_moves(self):
         for move in self.moves:
-            for cell in self.move_cells:
-                if cell.coord == move:
-                    cell.opacity = 0.7
+            move_cell = self.get_cell(move,"move")
+            move_cell.opacity = 0.7
 
     def deselect(self):
-        for cell in self.move_cells:
+        for cell in self.move_cells.values():
             cell.opacity = 0
 
-    def move(self, cell1, cell2):
-        for figure in self.figures:
-            if figure.coord == cell1:
-                piece = figure.piece
-                figure.piece = None
-                figure.source = figure.update_figure()
-        for figure in self.figures:
-            if figure.coord == cell2:
-                figure.piece = piece
-                figure.source = figure.update_figure()
+    def move(self, coord1, coord2):
+        figure1 = self.get_cell(coord1,"figure")
+        figure2 = self.get_cell(coord2,"figure")
+        piece = figure1.piece
+        figure1.piece = None
+        figure1.source = figure1.update_figure()
+        figure2.piece = piece
+        figure2.source = figure2.update_figure()
+
+    def get_cell(self,coord,cell_type):
+        cells = self.figures if cell_type == "figure" else self.move_cells
+        cell = cells[coord]
+        return cell
 
 
 class ChessGrid(GridLayout):
@@ -71,18 +73,18 @@ class ChessGrid(GridLayout):
         self.fill_board()
 
     def fill_board(self):
-        figure_cells = []
-        move_cells = []
+        figure_cells = {}
+        move_cells = {}
         for coord in manager.coords:
             if coord in manager.start_coords.keys():
                 anchor = Cell(coord=coord, piece=manager.start_coords[coord])
-                figure_cells.append(anchor.chessCell)
-                move_cells.append(anchor.moveCell)
+                figure_cells[coord] = anchor.chessCell
+                move_cells[coord] = anchor.moveCell
                 self.add_widget(anchor)
             else:
                 anchor = Cell(coord=coord)
-                figure_cells.append(anchor.chessCell)
-                move_cells.append(anchor.moveCell)
+                figure_cells[coord] = anchor.chessCell
+                move_cells[coord] = anchor.moveCell
                 self.add_widget(anchor)
         manager.figures = figure_cells
         manager.move_cells = move_cells
@@ -116,7 +118,7 @@ class ChessCell(ButtonBehavior, Image):
             if self.piece:
                 manager.piece_select = True
                 manager.piece_selected = self.coord
-                manager.moves = self.piece.get_moves(self.coord)
+                manager.moves = self.piece.get_moves(self.coord,manager.figures)
                 manager.show_moves()
 
     def update_figure(self):

@@ -1,5 +1,7 @@
 
+
 class ChessFigure():
+    type = ""
     pictures = {
         "pawn_white": "pics/pawn_white.png",
         "pawn_black": "pics/pawn_black.png",
@@ -17,13 +19,14 @@ class ChessFigure():
 
     def __init__(self, side):
         self.side = side
-        self.type = ""
+        self.subtype = self.get_subtype()
+        self.picture = self.pictures[self.subtype]
 
     def get_subtype(self):
         subtype = "_".join((self.type,self.side))
         return subtype
 
-    def get_moves(self,coord):
+    def get_moves(self,coord,figures):
         moves = []
         if self.side == "white":
             move = (coord[0] - 1, coord[1])
@@ -31,52 +34,44 @@ class ChessFigure():
         else:
             move = (coord[0] + 1, coord[1])
             moves.append(move)
+
+        for move in moves:
+            figure = figures[move]
+            if figure.piece and figure.piece.side == self.side:
+                moves.remove(move)
         return moves
 
-
 class ChessPawn(ChessFigure):
+    type = "pawn"
     def __init__(self,**kwargs):
         super(ChessPawn, self).__init__(**kwargs)
-        self.type = "pawn"
-        self.subtype = self.get_subtype()
-        self.picture = self.pictures[self.subtype]
 
 
 class ChessBishop(ChessFigure):
+    type = "bishop"
     def __init__(self,**kwargs):
         super(ChessBishop, self).__init__(**kwargs)
-        self.type = "bishop"
-        self.subtype = self.get_subtype()
-        self.picture = self.pictures[self.subtype]
 
 
 class ChessKnight(ChessFigure):
+    type = "knight"
     def __init__(self,**kwargs):
         super(ChessKnight, self).__init__(**kwargs)
-        self.type = "knight"
-        self.subtype = self.get_subtype()
-        self.picture = self.pictures[self.subtype]
 
 class ChessRook(ChessFigure):
+    type = "rook"
     def __init__(self,**kwargs):
         super(ChessRook, self).__init__(**kwargs)
-        self.type = "rook"
-        self.subtype = self.get_subtype()
-        self.picture = self.pictures[self.subtype]
 
 class ChessKing(ChessFigure):
+    type = "king"
     def __init__(self,**kwargs):
         super(ChessKing, self).__init__(**kwargs)
-        self.type = "king"
-        self.subtype = self.get_subtype()
-        self.picture = self.pictures[self.subtype]
 
 class ChessQueen(ChessFigure):
+    type = "queen"
     def __init__(self,**kwargs):
         super(ChessQueen, self).__init__(**kwargs)
-        self.type = "queen"
-        self.subtype = self.get_subtype()
-        self.picture = self.pictures[self.subtype]
 
 
 #piece = ChessPawn(side="white")
