@@ -27,19 +27,54 @@ class ChessFigure():
         return subtype
 
     def get_moves(self,coord,figures):
-        moves = []
+        init_moves = []
         if self.side == "white":
             move = (coord[0] - 1, coord[1])
-            moves.append(move)
         else:
             move = (coord[0] + 1, coord[1])
-            moves.append(move)
+        init_moves.append(move)
+        moves = self.validate_moves(init_moves, figures)
+        init_attack_moves = []
+        if self.side == "white":
+            move1 = (coord[0] - 1, coord[1] + 1)
+            move2 = (coord[0] - 1, coord[1] - 1)
+        else:
+            move1 = (coord[0] + 1, coord[1] + 1)
+            move2 = (coord[0] + 1, coord[1] - 1)
+        init_attack_moves.append(move1)
+        init_attack_moves.append(move2)
+        attack_moves = self.validate_attack_moves(init_attack_moves,figures)
+        result = moves + attack_moves
+        return result
 
-        for move in moves:
+    def validate_moves(self,init_moves,figures):
+        removes = []
+        for move in init_moves:
+            if move not in figures.keys():
+                removes.append(move)
+                continue
             figure = figures[move]
-            if figure.piece and figure.piece.side == self.side:
-                moves.remove(move)
+            if figure.piece:
+                removes.append(move)
+        moves = [m for m in init_moves if m not in removes]
         return moves
+
+    def validate_attack_moves(self,init_moves,figures):
+        removes = []
+        for move in init_moves:
+            if move not in figures.keys():
+                removes.append(move)
+                continue
+            figure = figures[move]
+            if not figure.piece:
+                removes.append(move)
+                continue
+            if figure.piece.side == self.side:
+                removes.append(move)
+        attack_moves = [m for m in init_moves if m not in removes]
+        return attack_moves
+
+
 
 class ChessPawn(ChessFigure):
     type = "pawn"
