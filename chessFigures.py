@@ -154,7 +154,3 @@ class ChessQueen(ChessFigure):
     def get_moves(self, coord, figures):
         moves = self.diagonal_moves(coord,figures)
         return moves
-
-
-
-#piece = ChessPawn(side="white")

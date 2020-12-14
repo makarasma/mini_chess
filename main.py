@@ -4,13 +4,9 @@ from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.button import Button
-from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import Image
 from kivy.uix.behaviors.button import ButtonBehavior
 from kivy.uix.anchorlayout import AnchorLayout
-from kivy.uix.label import Label
-from kivy.graphics import Rectangle, Color
 import itertools
 
 
@@ -36,16 +32,6 @@ class ChessManager():
             (5, 2): ("pawn", "white"), (5, 3): ("pawn", "white"), (5, 4): ("pawn", "white"), (5, 5): ("pawn", "white"),
             (5, 6): ("pawn", "white")
         }
-        # self.start_coords = {
-        #     (1, 1): ("bishop", "black"), (1, 2): ("knight", "black"), (1, 3): ("rook", "black"),
-        #     (1, 4): ("knight", "black"), (1, 5): ("knight", "black"), (1, 6): ("bishop", "black"),
-        #     (2, 1): ("pawn", "black"), (2, 2): ("pawn", "black"), (2, 3): ("pawn", "black"), (2, 4): ("pawn", "black"),
-        #     (2, 5): ("pawn", "black"), (2, 6): ("pawn", "black"), (6, 1): ("bishop", "white"),
-        #     (6, 2): ("knight", "white"), (6, 3): ("rook", "white"), (6, 4): ("knight", "white"),
-        #     (6, 5): ("knight", "white"), (6, 6): ("bishop", "white"), (5, 1): ("pawn", "white"),
-        #     (5, 2): ("pawn", "white"), (5, 3): ("pawn", "white"), (5, 4): ("pawn", "white"), (5, 5): ("pawn", "white"),
-        #     (5, 6): ("pawn", "white")
-        # }
         self.figures = None
         self.move_cells = None
         self.moves = None
@@ -63,12 +49,17 @@ class ChessManager():
             cell.opacity = 0
 
     def move(self, coord1, coord2):
-        figure1 = self.get_cell(coord1,"figure")
-        figure2 = self.get_cell(coord2,"figure")
-        piece = figure1.piece
+        figure1 = self.get_cell(coord1, "figure")
+        figure2 = self.get_cell(coord2, "figure")
+        if figure1.piece.side == "white" and coord2[0] == 1:
+            piece = figure2.get_figure(("queen", "white"))
+        elif figure1.piece.side == "black" and coord2[0] == 6:
+            piece = figure2.get_figure(("queen", "black"))
+        else:
+            piece = figure1.piece
         figure1.piece = None
-        figure1.source = figure1.update_figure()
         figure2.piece = piece
+        figure1.source = figure1.update_figure()
         figure2.source = figure2.update_figure()
 
     def get_cell(self,coord,cell_type):
