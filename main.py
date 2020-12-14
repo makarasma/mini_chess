@@ -26,26 +26,26 @@ class ChessManager():
         super(ChessManager, self).__init__(**kwargs)
         self.pre_coords = list(range(1, 7))
         self.coords = list(itertools.product(self.pre_coords, self.pre_coords))
+        self.start_coords = {
+            (1, 1): ("queen", "black"), (1, 2): ("knight", "black"), (1, 3): ("rook", "black"),
+            (1, 4): ("king", "black"), (1, 5): ("knight", "black"), (1, 6): ("bishop", "black"),
+            (2, 1): ("pawn", "black"), (2, 2): ("pawn", "black"), (2, 3): ("pawn", "black"), (2, 4): ("pawn", "black"),
+            (2, 5): ("pawn", "black"), (2, 6): ("pawn", "black"), (6, 1): ("queen", "white"),
+            (6, 2): ("knight", "white"), (6, 3): ("rook", "white"), (6, 4): ("king", "white"),
+            (6, 5): ("knight", "white"), (6, 6): ("bishop", "white"), (5, 1): ("pawn", "white"),
+            (5, 2): ("pawn", "white"), (5, 3): ("pawn", "white"), (5, 4): ("pawn", "white"), (5, 5): ("pawn", "white"),
+            (5, 6): ("pawn", "white")
+        }
         # self.start_coords = {
         #     (1, 1): ("bishop", "black"), (1, 2): ("knight", "black"), (1, 3): ("rook", "black"),
-        #     (1, 4): ("king", "black"), (1, 5): ("knight", "black"), (1, 6): ("bishop", "black"),
+        #     (1, 4): ("knight", "black"), (1, 5): ("knight", "black"), (1, 6): ("bishop", "black"),
         #     (2, 1): ("pawn", "black"), (2, 2): ("pawn", "black"), (2, 3): ("pawn", "black"), (2, 4): ("pawn", "black"),
         #     (2, 5): ("pawn", "black"), (2, 6): ("pawn", "black"), (6, 1): ("bishop", "white"),
-        #     (6, 2): ("knight", "white"), (6, 3): ("rook", "white"), (6, 4): ("king", "white"),
+        #     (6, 2): ("knight", "white"), (6, 3): ("rook", "white"), (6, 4): ("knight", "white"),
         #     (6, 5): ("knight", "white"), (6, 6): ("bishop", "white"), (5, 1): ("pawn", "white"),
         #     (5, 2): ("pawn", "white"), (5, 3): ("pawn", "white"), (5, 4): ("pawn", "white"), (5, 5): ("pawn", "white"),
         #     (5, 6): ("pawn", "white")
         # }
-        self.start_coords = {
-            (1, 1): ("knight", "black"), (1, 2): ("knight", "black"), (1, 3): ("knight", "black"),
-            (1, 4): ("knight", "black"), (1, 5): ("knight", "black"), (1, 6): ("knight", "black"),
-            (2, 1): ("pawn", "black"), (2, 2): ("pawn", "black"), (2, 3): ("pawn", "black"), (2, 4): ("pawn", "black"),
-            (2, 5): ("pawn", "black"), (2, 6): ("pawn", "black"), (6, 1): ("knight", "white"),
-            (6, 2): ("knight", "white"), (6, 3): ("knight", "white"), (6, 4): ("knight", "white"),
-            (6, 5): ("knight", "white"), (6, 6): ("knight", "white"), (5, 1): ("pawn", "white"),
-            (5, 2): ("pawn", "white"), (5, 3): ("pawn", "white"), (5, 4): ("pawn", "white"), (5, 5): ("pawn", "white"),
-            (5, 6): ("pawn", "white")
-        }
         self.figures = None
         self.move_cells = None
         self.moves = None
@@ -127,9 +127,9 @@ class ChessCell(ButtonBehavior, Image):
                 manager.move(manager.piece_selected,self.coord)
                 manager.turn = "white" if manager.turn == "black" else "black"
         else:
-            if self.piece.side != manager.turn:
-                return
             if self.piece:
+                if self.piece.side != manager.turn:
+                    return
                 manager.piece_select = True
                 manager.piece_selected = self.coord
                 manager.moves = self.piece.get_moves(self.coord,manager.figures)

@@ -1,4 +1,4 @@
-
+import itertools
 
 class ChessFigure():
     type = ""
@@ -23,10 +23,10 @@ class ChessFigure():
         self.picture = self.pictures[self.subtype]
 
     def get_subtype(self):
-        subtype = "_".join((self.type,self.side))
+        subtype = "_".join((self.type, self.side))
         return subtype
 
-    def validate_moves(self,init_moves,figures):
+    def validate_moves(self, init_moves, figures):
         removes = []
         for move in init_moves:
             if move not in figures.keys():
@@ -38,7 +38,7 @@ class ChessFigure():
         moves = [m for m in init_moves if m not in removes]
         return moves
 
-    def validate_attack_moves(self,init_moves,figures):
+    def validate_attack_moves(self, init_moves, figures):
         removes = []
         for move in init_moves:
             if move not in figures.keys():
@@ -53,30 +53,48 @@ class ChessFigure():
         attack_moves = [m for m in init_moves if m not in removes]
         return attack_moves
 
+    def diagonal(self,coord,figures,direction):
+        moves = []
+        cell = coord
+        while True:
+            cell = (cell[0] + direction[0], cell[1] + direction[1])
+            if cell not in figures.keys():
+                break
+            figure = figures[cell]
+            if figure.piece:
+                if figure.piece.side != self.side:
+                    moves.append(cell)
+                break
+            moves.append(cell)
+        return moves
+
+    def diagonal_moves(self, coord, figures):
+        all_moves = []
+        for direction in self.directions:
+            moves = self.diagonal(coord, figures, direction)
+            all_moves.extend(moves)
+        return all_moves
+
 
 
 class ChessPawn(ChessFigure):
     type = "pawn"
-    def __init__(self,**kwargs):
-        super(ChessPawn, self).__init__(**kwargs)
 
     def get_moves(self,coord,figures):
         init_moves = []
-        if self.side == "white":
-            move = (coord[0] - 1, coord[1])
-        else:
-            move = (coord[0] + 1, coord[1])
-        init_moves.append(move)
-        moves = self.validate_moves(init_moves, figures)
         init_attack_moves = []
         if self.side == "white":
+            move = (coord[0] - 1, coord[1])
             move1 = (coord[0] - 1, coord[1] + 1)
             move2 = (coord[0] - 1, coord[1] - 1)
         else:
+            move = (coord[0] + 1, coord[1])
             move1 = (coord[0] + 1, coord[1] + 1)
             move2 = (coord[0] + 1, coord[1] - 1)
+        init_moves.append(move)
         init_attack_moves.append(move1)
         init_attack_moves.append(move2)
+        moves = self.validate_moves(init_moves, figures)
         attack_moves = self.validate_attack_moves(init_attack_moves,figures)
         result = moves + attack_moves
         return result
@@ -84,24 +102,21 @@ class ChessPawn(ChessFigure):
 
 class ChessBishop(ChessFigure):
     type = "bishop"
-    def __init__(self,**kwargs):
-        super(ChessBishop, self).__init__(**kwargs)
+    directions = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
+
+    def get_moves(self, coord, figures):
+        moves = self.diagonal_moves(coord,figures)
+        return moves
+
 
 class ChessKnight(ChessFigure):
     type = "knight"
-    def __init__(self,**kwargs):
-        super(ChessKnight, self).__init__(**kwargs)
+    directions = [(2, 1), (1, 2), (-1, 2), (-2, 1), (-2, -1), (-1, -2), (1, -2), (2, -1)]
 
     def get_moves(self,coord,figures):
         init_moves = []
-        init_moves.append((coord[0] + 2, coord[1] + 1))
-        init_moves.append((coord[0] + 1, coord[1] + 2))
-        init_moves.append((coord[0] - 1, coord[1] + 2))
-        init_moves.append((coord[0] - 2, coord[1] + 1))
-        init_moves.append((coord[0] - 2, coord[1] - 1))
-        init_moves.append((coord[0] - 1, coord[1] - 2))
-        init_moves.append((coord[0] + 1, coord[1] - 2))
-        init_moves.append((coord[0] + 2, coord[1] - 1))
+        for direction in self.directions:
+            init_moves.append((coord[0] + direction[0], coord[1] + direction[1]))
         attack_moves = self.validate_attack_moves(init_moves,figures)
         moves = self.validate_moves(init_moves,figures)
         result = attack_moves + moves
@@ -109,18 +124,37 @@ class ChessKnight(ChessFigure):
 
 class ChessRook(ChessFigure):
     type = "rook"
-    def __init__(self,**kwargs):
-        super(ChessRook, self).__init__(**kwargs)
+    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+
+    def get_moves(self, coord, figures):
+        moves = self.diagonal_moves(coord,figures)
+        return moves
+
 
 class ChessKing(ChessFigure):
     type = "king"
-    def __init__(self,**kwargs):
-        super(ChessKing, self).__init__(**kwargs)
+    directions = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]
+
+    def get_moves(self, coord, figures):
+        moves = []
+        for direction in self.directions:
+            move = (coord[0] + direction[0], coord[1] + direction[1])
+            if move in figures.keys():
+                if figures[move].piece:
+                    if figures[move].piece.side != self.side:
+                        moves.append(move)
+                else:
+                    moves.append(move)
+        return moves
 
 class ChessQueen(ChessFigure):
     type = "queen"
-    def __init__(self,**kwargs):
-        super(ChessQueen, self).__init__(**kwargs)
+    directions = [(1, 1), (-1, 1), (1, -1), (-1, -1), (0, 1), (0, -1), (1, 0), (-1, 0)]
+
+    def get_moves(self, coord, figures):
+        moves = self.diagonal_moves(coord,figures)
+        return moves
+
 
 
 #piece = ChessPawn(side="white")
