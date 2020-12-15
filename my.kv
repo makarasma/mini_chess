@@ -41,20 +41,28 @@
             text: 'Menu'
             background_color: (0.1, 0.5, 0.6, 1)
             size_hint: (0.15, 0.05)
-            pos_hint: {"x":0.825, "top":0.9}
+            pos_hint: {"x":0.825, "top":0.575}
             on_release: root.manager.current = 'main'
+            on_release: root.reset()
 
         Button:
             text: 'Exit Game'
             background_color: (0.1, 0.5, 0.6, 1)
             size_hint: (0.15, 0.05)
-            pos_hint: {"x":0.825, "top":0.8}
+            pos_hint: {"x":0.825, "top":0.475}
             on_release: root.exit_game()
 
         Label:
-            text: "Hi"
-            pos_hint: {"x":0.8, "top":0.5}
+            text: root.message_white
+            pos_hint: {"x":0.825, "top":0.19}
             size_hint: (0.15, 0.05)
+            font_size: '20sp'
+
+        Label:
+            text: root.message_black
+            pos_hint: {"x":0.825, "top":0.86}
+            size_hint: (0.15, 0.05)
+            font_size: '20sp'
 
         FloatLayout:
             size_hint: (0.8, 1)
@@ -65,6 +73,7 @@
                 keep_ratio:False
 
             ChessGrid:
+                id: chessGrid
 
 
 

@@ -7,6 +7,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.behaviors.button import ButtonBehavior
 from kivy.uix.anchorlayout import AnchorLayout
+from kivy.properties import StringProperty
 import itertools
 
 
@@ -15,7 +16,27 @@ class MainWindow(Screen):
         sys.exit()
 
 class GameWindow(Screen):
-    pass
+    message_white = StringProperty()
+    message_black = StringProperty()
+
+    def __init__(self,**kwargs):
+        super(GameWindow, self).__init__(**kwargs)
+        self.message_white = "White Turn"
+        self.message_black = ""
+
+    def change_message(self, message_white, message_black):
+        self.message_white = message_white
+        self.message_black = message_black
+
+    def exit_game(self):
+        sys.exit()
+
+    def reset(self):
+        global manager
+        manager = ChessManager()
+        self.ids.chessGrid.clear_widgets()
+        self.ids.chessGrid.fill_board()
+        sm.get_screen("game").change_message(manager.message_white, manager.message_black)
 
 class ChessManager():
     def __init__(self, **kwargs):
@@ -23,10 +44,10 @@ class ChessManager():
         self.pre_coords = list(range(1, 7))
         self.coords = list(itertools.product(self.pre_coords, self.pre_coords))
         self.start_coords = {
-            (1, 1): ("queen", "black"), (1, 2): ("knight", "black"), (1, 3): ("rook", "black"),
+            (1, 1): ("bishop", "black"), (1, 2): ("knight", "black"), (1, 3): ("rook", "black"),
             (1, 4): ("king", "black"), (1, 5): ("knight", "black"), (1, 6): ("bishop", "black"),
             (2, 1): ("pawn", "black"), (2, 2): ("pawn", "black"), (2, 3): ("pawn", "black"), (2, 4): ("pawn", "black"),
-            (2, 5): ("pawn", "black"), (2, 6): ("pawn", "black"), (6, 1): ("queen", "white"),
+            (2, 5): ("pawn", "black"), (2, 6): ("pawn", "black"), (6, 1): ("bishop", "white"),
             (6, 2): ("knight", "white"), (6, 3): ("rook", "white"), (6, 4): ("king", "white"),
             (6, 5): ("knight", "white"), (6, 6): ("bishop", "white"), (5, 1): ("pawn", "white"),
             (5, 2): ("pawn", "white"), (5, 3): ("pawn", "white"), (5, 4): ("pawn", "white"), (5, 5): ("pawn", "white"),
@@ -38,6 +59,9 @@ class ChessManager():
         self.piece_select = False
         self.piece_selected = None
         self.turn = "white"
+        self.game_ended = False
+        self.message_white = "White Turn"
+        self.message_black = ""
 
     def show_moves(self):
         for move in self.moves:
@@ -51,6 +75,16 @@ class ChessManager():
     def move(self, coord1, coord2):
         figure1 = self.get_cell(coord1, "figure")
         figure2 = self.get_cell(coord2, "figure")
+        if figure2.piece:
+            if figure2.piece.type == "king":
+                manager.game_ended = True
+                if figure2.piece.side == "black":
+                    manager.message_white = "White has won!"
+                    manager.message_black = ""
+                else:
+                    manager.message_white = ""
+                    manager.message_black = "Black has won!"
+                sm.get_screen("game").change_message(manager.message_white, manager.message_black)
         if figure1.piece.side == "white" and coord2[0] == 1:
             piece = figure2.get_figure(("queen", "white"))
         elif figure1.piece.side == "black" and coord2[0] == 6:
@@ -93,9 +127,9 @@ class ChessGrid(GridLayout):
 
 class Cell(AnchorLayout):
 
-    def __init__(self, coord, piece=None, occupied=False, **kwargs):
+    def __init__(self, coord, piece=None, **kwargs):
         super(Cell, self).__init__(**kwargs)
-        self.chessCell = ChessCell(coord,piece)
+        self.chessCell = ChessCell(coord, piece)
         self.moveCell = MoveCell(coord)
         self.add_widget(self.moveCell)
         self.add_widget(self.chessCell)
@@ -111,19 +145,28 @@ class ChessCell(ButtonBehavior, Image):
         self.source = self.update_figure()
 
     def on_press(self):
+        if manager.game_ended:
+            return
         if manager.piece_select:
             manager.deselect()
             manager.piece_select = False
             if self.coord in manager.moves:
-                manager.move(manager.piece_selected,self.coord)
                 manager.turn = "white" if manager.turn == "black" else "black"
+                if manager.message_white == "White Turn":
+                    manager.message_white = ""
+                    manager.message_black = "Black Turn"
+                else:
+                    manager.message_black = ""
+                    manager.message_white = "White Turn"
+                sm.get_screen("game").change_message(manager.message_white,manager.message_black)
+                manager.move(manager.piece_selected, self.coord)
         else:
             if self.piece:
                 if self.piece.side != manager.turn:
                     return
                 manager.piece_select = True
                 manager.piece_selected = self.coord
-                manager.moves = self.piece.get_moves(self.coord,manager.figures)
+                manager.moves = self.piece.get_moves(self.coord, manager.figures)
                 manager.show_moves()
 
     def update_figure(self):
@@ -150,9 +193,9 @@ class MoveCell(ButtonBehavior, Image):
         self.coord = coord
 
 
-kv = Builder.load_file("my.kv")
 manager = ChessManager()
 sm = ScreenManager()
+kv = Builder.load_file("my.kv")
 sm.add_widget(MainWindow(name='main'))
 sm.add_widget(GameWindow(name='game'))
 
