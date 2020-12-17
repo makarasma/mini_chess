@@ -18,6 +18,7 @@
             size_hint: (0.15, 0.05)
             pos_hint: {"x":0.425, "top":0.5}
             on_release: root.manager.current = 'game'
+            on_release: root.start_game()
 
         Button:
             text: 'Exit Game'
@@ -61,6 +62,18 @@
         Label:
             text: root.message_black
             pos_hint: {"x":0.825, "top":0.86}
+            size_hint: (0.15, 0.05)
+            font_size: '20sp'
+
+        Label:
+            text: root.message_timer_black
+            pos_hint: {"x":0.825, "top":0.95}
+            size_hint: (0.15, 0.05)
+            font_size: '20sp'
+
+        Label:
+            text: root.message_timer_white
+            pos_hint: {"x":0.825, "top":0.1}
             size_hint: (0.15, 0.05)
             font_size: '20sp'
 

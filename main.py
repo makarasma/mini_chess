@@ -7,36 +7,61 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.behaviors.button import ButtonBehavior
 from kivy.uix.anchorlayout import AnchorLayout
-from kivy.properties import StringProperty
+from kivy.properties import StringProperty, NumericProperty
 import itertools
+import time
+import threading
 
 
 class MainWindow(Screen):
+
     def exit_game(self):
+        timer.game = False
         sys.exit()
+
+    def start_game(self):
+        timer.game = True
+        gw.init()
+        t1 = threading.Thread(target=timer.chess_timer)
+        t1.start()
+
 
 class GameWindow(Screen):
     message_white = StringProperty()
     message_black = StringProperty()
+    message_timer_white = StringProperty()
+    message_timer_black = StringProperty()
 
-    def __init__(self,**kwargs):
+    def __init__(self, **kwargs):
         super(GameWindow, self).__init__(**kwargs)
-        self.message_white = "White Turn"
-        self.message_black = ""
+        self.init()
 
     def change_message(self, message_white, message_black):
         self.message_white = message_white
         self.message_black = message_black
 
+    def change_timer(self,white_timer=None,black_timer=None):
+        if white_timer:
+            gw.message_timer_white = white_timer
+        if black_timer:
+            gw.message_timer_black = black_timer
+
     def exit_game(self):
-        sys.exit()
+        mw.exit_game()
+
+    def init(self):
+        self.message_white = "White Turn"
+        self.message_black = ""
+        self.message_timer_white = "10:00"
+        self.message_timer_black = "10:00"
 
     def reset(self):
         global manager
         manager = ChessManager()
         self.ids.chessGrid.clear_widgets()
         self.ids.chessGrid.fill_board()
-        sm.get_screen("game").change_message(manager.message_white, manager.message_black)
+        timer.game = False
+        time.sleep(0.2)
 
 class ChessManager():
     def __init__(self, **kwargs):
@@ -60,8 +85,9 @@ class ChessManager():
         self.piece_selected = None
         self.turn = "white"
         self.game_ended = False
-        self.message_white = "White Turn"
-        self.message_black = ""
+        self.timer_white = 60*10
+        self.timer_black = 60*10
+
 
     def show_moves(self):
         for move in self.moves:
@@ -79,12 +105,10 @@ class ChessManager():
             if figure2.piece.type == "king":
                 manager.game_ended = True
                 if figure2.piece.side == "black":
-                    manager.message_white = "White has won!"
-                    manager.message_black = ""
+                    gw.change_message("White has won!", "")
                 else:
-                    manager.message_white = ""
-                    manager.message_black = "Black has won!"
-                sm.get_screen("game").change_message(manager.message_white, manager.message_black)
+                    gw.change_message("", "Black has won!")
+                timer.game = False
         if figure1.piece.side == "white" and coord2[0] == 1:
             piece = figure2.get_figure(("queen", "white"))
         elif figure1.piece.side == "black" and coord2[0] == 6:
@@ -96,11 +120,25 @@ class ChessManager():
         figure1.source = figure1.update_figure()
         figure2.source = figure2.update_figure()
 
-    def get_cell(self,coord,cell_type):
+    def get_cell(self, coord, cell_type):
         cells = self.figures if cell_type == "figure" else self.move_cells
         cell = cells[coord]
         return cell
 
+class Timer():
+    def __init__(self):
+        self.game = False
+
+    def chess_timer(self):
+        while self.game:
+            if manager.turn == "white":
+                time.sleep(0.1)
+                manager.timer_white = float(manager.timer_white) - 0.1
+                gw.message_timer_white = time.strftime('%M:%S', time.gmtime(manager.timer_white))
+            if manager.turn == "black":
+                time.sleep(0.1)
+                manager.timer_black = float(manager.timer_black) - 0.1
+                gw.message_timer_black = time.strftime('%M:%S', time.gmtime(manager.timer_black))
 
 class ChessGrid(GridLayout):
     def __init__(self, **kwargs):
@@ -152,13 +190,10 @@ class ChessCell(ButtonBehavior, Image):
             manager.piece_select = False
             if self.coord in manager.moves:
                 manager.turn = "white" if manager.turn == "black" else "black"
-                if manager.message_white == "White Turn":
-                    manager.message_white = ""
-                    manager.message_black = "Black Turn"
+                if manager.turn == "white":
+                    gw.change_message("White Turn", "")
                 else:
-                    manager.message_black = ""
-                    manager.message_white = "White Turn"
-                sm.get_screen("game").change_message(manager.message_white,manager.message_black)
+                    gw.change_message("", "Black Turn")
                 manager.move(manager.piece_selected, self.coord)
         else:
             if self.piece:
@@ -194,10 +229,16 @@ class MoveCell(ButtonBehavior, Image):
 
 
 manager = ChessManager()
+timer = Timer()
+
 sm = ScreenManager()
 kv = Builder.load_file("my.kv")
-sm.add_widget(MainWindow(name='main'))
-sm.add_widget(GameWindow(name='game'))
+mw = MainWindow(name='main')
+gw = GameWindow(name='game')
+sm.add_widget(mw)
+sm.add_widget(gw)
+
+
 
 class MiniChessApp(App):
     def build(self):
