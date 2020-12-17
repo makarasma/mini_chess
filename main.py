@@ -7,23 +7,26 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.behaviors.button import ButtonBehavior
 from kivy.uix.anchorlayout import AnchorLayout
-from kivy.properties import StringProperty, NumericProperty
+from kivy.properties import StringProperty
 import itertools
 import time
 import threading
 
 
 class MainWindow(Screen):
-
     def exit_game(self):
         timer.game = False
         sys.exit()
 
-    def start_game(self):
-        timer.game = True
+
+class GameModeWindow(Screen):
+    def start_game(self, game_time=None):
+        manager.update_time(game_time)
+        if game_time:
+            timer.game = True
+            t1 = threading.Thread(target=timer.chess_timer)
+            t1.start()
         gw.init()
-        t1 = threading.Thread(target=timer.chess_timer)
-        t1.start()
 
 
 class GameWindow(Screen):
@@ -52,16 +55,19 @@ class GameWindow(Screen):
     def init(self):
         self.message_white = "White Turn"
         self.message_black = ""
-        self.message_timer_white = "10:00"
-        self.message_timer_black = "10:00"
+        if manager.game_time:
+            self.message_timer_white = f"{manager.game_time}:00"
+            self.message_timer_black = f"{manager.game_time}:00"
+        else:
+            self.message_timer_white = ""
+            self.message_timer_black = ""
 
     def reset(self):
-        global manager
-        manager = ChessManager()
         self.ids.chessGrid.clear_widgets()
         self.ids.chessGrid.fill_board()
         timer.game = False
         time.sleep(0.2)
+
 
 class ChessManager():
     def __init__(self, **kwargs):
@@ -85,9 +91,9 @@ class ChessManager():
         self.piece_selected = None
         self.turn = "white"
         self.game_ended = False
-        self.timer_white = 60*10
-        self.timer_black = 60*10
-
+        self.game_time = None
+        self.timer_white = None
+        self.timer_black = None
 
     def show_moves(self):
         for move in self.moves:
@@ -125,6 +131,13 @@ class ChessManager():
         cell = cells[coord]
         return cell
 
+    def update_time(self, game_time):
+        self.game_time = game_time
+        if self.game_time:
+            self.timer_white = 60 * self.game_time
+            self.timer_black = 60 * self.game_time
+
+
 class Timer():
     def __init__(self):
         self.game = False
@@ -139,6 +152,7 @@ class Timer():
                 time.sleep(0.1)
                 manager.timer_black = float(manager.timer_black) - 0.1
                 gw.message_timer_black = time.strftime('%M:%S', time.gmtime(manager.timer_black))
+
 
 class ChessGrid(GridLayout):
     def __init__(self, **kwargs):
@@ -163,8 +177,8 @@ class ChessGrid(GridLayout):
         manager.figures = figure_cells
         manager.move_cells = move_cells
 
-class Cell(AnchorLayout):
 
+class Cell(AnchorLayout):
     def __init__(self, coord, piece=None, **kwargs):
         super(Cell, self).__init__(**kwargs)
         self.chessCell = ChessCell(coord, piece)
@@ -172,8 +186,8 @@ class Cell(AnchorLayout):
         self.add_widget(self.moveCell)
         self.add_widget(self.chessCell)
 
-class ChessCell(ButtonBehavior, Image):
 
+class ChessCell(ButtonBehavior, Image):
     def __init__(self, coord, piece=None, **kwargs):
         super(ChessCell, self).__init__(**kwargs)
         self.size_hint = (0.7, 0.7)
@@ -208,7 +222,7 @@ class ChessCell(ButtonBehavior, Image):
         picture = self.piece.picture if self.piece else "pics/empty.png"
         return picture
 
-    def get_figure(self,piece):
+    def get_figure(self, piece):
         pieces = {
             "pawn": chessFigures.ChessPawn(side=piece[1]),
             "bishop": chessFigures.ChessBishop(side=piece[1]),
@@ -218,6 +232,7 @@ class ChessCell(ButtonBehavior, Image):
             "queen": chessFigures.ChessQueen(side=piece[1])
         }
         return pieces[piece[0]]
+
 
 class MoveCell(ButtonBehavior, Image):
     def __init__(self, coord, **kwargs):
@@ -235,14 +250,16 @@ sm = ScreenManager()
 kv = Builder.load_file("my.kv")
 mw = MainWindow(name='main')
 gw = GameWindow(name='game')
+gm = GameModeWindow(name='gamemode')
 sm.add_widget(mw)
 sm.add_widget(gw)
-
+sm.add_widget(gm)
 
 
 class MiniChessApp(App):
     def build(self):
         return sm
+
 
 if __name__ == '__main__':
     MiniChessApp().run()

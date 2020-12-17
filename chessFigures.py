@@ -1,4 +1,3 @@
-import itertools
 
 class ChessFigure():
     type = ""
@@ -80,7 +79,7 @@ class ChessFigure():
 class ChessPawn(ChessFigure):
     type = "pawn"
 
-    def get_moves(self,coord,figures):
+    def get_moves(self, coord, figures):
         init_moves = []
         init_attack_moves = []
         if self.side == "white":
