@@ -1,3 +1,9 @@
+from kivy.config import Config
+Config.set('graphics', 'resizable', '0')
+Config.set('graphics', 'width', '900')
+Config.set('graphics', 'height', '600')
+Config.write()
+
 import sys
 import chessFigures
 from kivy.app import App
@@ -15,7 +21,6 @@ import threading
 
 class MainWindow(Screen):
     def exit_game(self):
-        manager.game = False
         sys.exit()
 
 
@@ -68,7 +73,6 @@ class GameWindow(Screen):
 
 
 class Timer():
-
     def chess_timer(self):
         time.sleep(2)
         while manager.game:
@@ -257,6 +261,7 @@ gm = GameModeWindow(name='gamemode')
 sm.add_widget(mw)
 sm.add_widget(gw)
 sm.add_widget(gm)
+manager = ChessManager(game_time=None)
 
 
 class MiniChessApp(App):
