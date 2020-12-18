@@ -15,18 +15,19 @@ import threading
 
 class MainWindow(Screen):
     def exit_game(self):
-        timer.game = False
+        manager.game = False
         sys.exit()
 
 
 class GameModeWindow(Screen):
     def start_game(self, game_time=None):
-        manager.update_time(game_time)
+        global manager, timer
+        manager = ChessManager(game_time=game_time)
+        timer = Timer()
+        gw.init()
         if game_time:
-            timer.game = True
             t1 = threading.Thread(target=timer.chess_timer)
             t1.start()
-        gw.init()
 
 
 class GameWindow(Screen):
@@ -35,15 +36,11 @@ class GameWindow(Screen):
     message_timer_white = StringProperty()
     message_timer_black = StringProperty()
 
-    def __init__(self, **kwargs):
-        super(GameWindow, self).__init__(**kwargs)
-        self.init()
-
     def change_message(self, message_white, message_black):
         self.message_white = message_white
         self.message_black = message_black
 
-    def change_timer(self,white_timer=None,black_timer=None):
+    def change_timer(self, white_timer=None, black_timer=None):
         if white_timer:
             gw.message_timer_white = white_timer
         if black_timer:
@@ -58,19 +55,43 @@ class GameWindow(Screen):
         if manager.game_time:
             self.message_timer_white = f"{manager.game_time}:00"
             self.message_timer_black = f"{manager.game_time}:00"
+            print("")
         else:
             self.message_timer_white = ""
             self.message_timer_black = ""
+        self.ids.chessGrid.fill_board()
 
     def reset(self):
         self.ids.chessGrid.clear_widgets()
-        self.ids.chessGrid.fill_board()
-        timer.game = False
+        manager.game = False
         time.sleep(0.2)
 
 
+class Timer():
+
+    def chess_timer(self):
+        time.sleep(2)
+        while manager.game:
+            if manager.timer_black <= 0:
+                manager.game_won("white")
+                break
+            if manager.timer_white <= 0:
+                manager.game_won("black")
+                break
+            if manager.turn == "white":
+                time.sleep(0.1)
+                manager.timer_white = manager.timer_white - 0.1
+                manager.timer_white = 0 if manager.timer_white < 0 else manager.timer_white
+                gw.message_timer_white = time.strftime('%M:%S', time.gmtime(manager.timer_white))
+            if manager.turn == "black":
+                time.sleep(0.1)
+                manager.timer_black = manager.timer_black - 0.1
+                manager.timer_black = 0 if manager.timer_black < 0 else manager.timer_black
+                gw.message_timer_black = time.strftime('%M:%S', time.gmtime(manager.timer_black))
+
+
 class ChessManager():
-    def __init__(self, **kwargs):
+    def __init__(self, game_time, **kwargs):
         super(ChessManager, self).__init__(**kwargs)
         self.pre_coords = list(range(1, 7))
         self.coords = list(itertools.product(self.pre_coords, self.pre_coords))
@@ -90,10 +111,13 @@ class ChessManager():
         self.piece_select = False
         self.piece_selected = None
         self.turn = "white"
-        self.game_ended = False
-        self.game_time = None
+        self.game = True
+        self.game_time = game_time
         self.timer_white = None
         self.timer_black = None
+        if game_time:
+            self.timer_white = 60 * self.game_time
+            self.timer_black = 60 * self.game_time
 
     def show_moves(self):
         for move in self.moves:
@@ -109,15 +133,13 @@ class ChessManager():
         figure2 = self.get_cell(coord2, "figure")
         if figure2.piece:
             if figure2.piece.type == "king":
-                manager.game_ended = True
                 if figure2.piece.side == "black":
-                    gw.change_message("White has won!", "")
+                    self.game_won("white")
                 else:
-                    gw.change_message("", "Black has won!")
-                timer.game = False
-        if figure1.piece.side == "white" and coord2[0] == 1:
+                    self.game_won("black")
+        if figure1.piece.side == "white" and coord2[0] == 1 and figure1.piece.type == "pawn":
             piece = figure2.get_figure(("queen", "white"))
-        elif figure1.piece.side == "black" and coord2[0] == 6:
+        elif figure1.piece.side == "black" and coord2[0] == 6 and figure1.piece.type == "pawn":
             piece = figure2.get_figure(("queen", "black"))
         else:
             piece = figure1.piece
@@ -131,34 +153,18 @@ class ChessManager():
         cell = cells[coord]
         return cell
 
-    def update_time(self, game_time):
-        self.game_time = game_time
-        if self.game_time:
-            self.timer_white = 60 * self.game_time
-            self.timer_black = 60 * self.game_time
-
-
-class Timer():
-    def __init__(self):
-        self.game = False
-
-    def chess_timer(self):
-        while self.game:
-            if manager.turn == "white":
-                time.sleep(0.1)
-                manager.timer_white = float(manager.timer_white) - 0.1
-                gw.message_timer_white = time.strftime('%M:%S', time.gmtime(manager.timer_white))
-            if manager.turn == "black":
-                time.sleep(0.1)
-                manager.timer_black = float(manager.timer_black) - 0.1
-                gw.message_timer_black = time.strftime('%M:%S', time.gmtime(manager.timer_black))
+    def game_won(self, side):
+        if side == "white":
+            gw.change_message("White has won!", "")
+        else:
+            gw.change_message("", "Black has won!")
+        manager.game = False
 
 
 class ChessGrid(GridLayout):
     def __init__(self, **kwargs):
         super(ChessGrid, self).__init__(**kwargs)
         self.cols = 6
-        self.fill_board()
 
     def fill_board(self):
         figure_cells = {}
@@ -197,7 +203,7 @@ class ChessCell(ButtonBehavior, Image):
         self.source = self.update_figure()
 
     def on_press(self):
-        if manager.game_ended:
+        if not manager.game:
             return
         if manager.piece_select:
             manager.deselect()
@@ -243,9 +249,6 @@ class MoveCell(ButtonBehavior, Image):
         self.coord = coord
 
 
-manager = ChessManager()
-timer = Timer()
-
 sm = ScreenManager()
 kv = Builder.load_file("my.kv")
 mw = MainWindow(name='main')
@@ -263,3 +266,4 @@ class MiniChessApp(App):
 
 if __name__ == '__main__':
     MiniChessApp().run()
+    manager.game = False
