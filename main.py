@@ -21,6 +21,7 @@ import threading
 
 class MainWindow(Screen):
     def exit_game(self):
+        manager.game = False
         sys.exit()
 
 
@@ -265,6 +266,8 @@ manager = ChessManager(game_time=None)
 
 
 class MiniChessApp(App):
+    icon = "pics/icon.png"
+
     def build(self):
         return sm
 
