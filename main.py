@@ -20,12 +20,14 @@ import threading
 
 
 class MainWindow(Screen):
+    """Game menu window, also manages exit."""
     def exit_game(self):
         manager.game = False
         sys.exit()
 
 
 class GameModeWindow(Screen):
+    """Game mode window, manages game start for a selected game mode"""
     def start_game(self, game_time=None):
         global manager, timer
         manager = ChessManager(game_time=game_time)
@@ -37,25 +39,22 @@ class GameModeWindow(Screen):
 
 
 class GameWindow(Screen):
+    """Game window that displays the game."""
     message_white = StringProperty()
     message_black = StringProperty()
     message_timer_white = StringProperty()
     message_timer_black = StringProperty()
 
     def change_message(self, message_white, message_black):
+        """Changes the message shown for both players."""
         self.message_white = message_white
         self.message_black = message_black
-
-    def change_timer(self, white_timer=None, black_timer=None):
-        if white_timer:
-            gw.message_timer_white = white_timer
-        if black_timer:
-            gw.message_timer_black = black_timer
 
     def exit_game(self):
         mw.exit_game()
 
     def init(self):
+        """Initializes game messages and timer text for both players. Also fills the chess board with pieces."""
         self.message_white = "White Turn"
         self.message_black = ""
         if manager.game_time:
@@ -68,12 +67,14 @@ class GameWindow(Screen):
         self.ids.chessGrid.fill_board()
 
     def reset(self):
+        """Clears the chess board and resets the game when returning back to menu from the game."""
         self.ids.chessGrid.clear_widgets()
         manager.game = False
         time.sleep(0.2)
 
 
 class Timer():
+    """Chess timer that runs in parallel with the game when one of the blitz modes are played."""
     def chess_timer(self):
         time.sleep(2)
         while manager.game:
@@ -96,6 +97,7 @@ class Timer():
 
 
 class ChessManager():
+    """Manages the game and chess piece parameters."""
     def __init__(self, game_time, **kwargs):
         super(ChessManager, self).__init__(**kwargs)
         self.pre_coords = list(range(1, 7))
@@ -125,15 +127,18 @@ class ChessManager():
             self.timer_black = 60 * self.game_time
 
     def show_moves(self):
+        """Highlights the chess cells where a move is available."""
         for move in self.moves:
-            move_cell = self.get_cell(move,"move")
+            move_cell = self.get_cell(move, "move")
             move_cell.opacity = 0.7
 
     def deselect(self):
+        """Removes the marking of available moves on the board when piece is deselected."""
         for cell in self.move_cells.values():
             cell.opacity = 0
 
     def move(self, coord1, coord2):
+        """Performs a chess piece move"""
         figure1 = self.get_cell(coord1, "figure")
         figure2 = self.get_cell(coord2, "figure")
         if figure2.piece:
@@ -154,11 +159,13 @@ class ChessManager():
         figure2.source = figure2.update_figure()
 
     def get_cell(self, coord, cell_type):
+        """Returns chess board cell to the manager given the coordinates."""
         cells = self.figures if cell_type == "figure" else self.move_cells
         cell = cells[coord]
         return cell
 
     def game_won(self, side):
+        """A function that ends the game when won."""
         if side == "white":
             gw.change_message("White has won!", "")
         else:
@@ -167,11 +174,13 @@ class ChessManager():
 
 
 class ChessGrid(GridLayout):
+    """A grid container that contains the cells of chess board."""
     def __init__(self, **kwargs):
         super(ChessGrid, self).__init__(**kwargs)
         self.cols = 6
 
     def fill_board(self):
+        """Fills the board with chess cells."""
         figure_cells = {}
         move_cells = {}
         for coord in manager.coords:
@@ -190,6 +199,8 @@ class ChessGrid(GridLayout):
 
 
 class Cell(AnchorLayout):
+    """A chess cell object that contains a cell responsible for displaying a chess piece
+    and a cell that is responsible for displaying the chess moves."""
     def __init__(self, coord, piece=None, **kwargs):
         super(Cell, self).__init__(**kwargs)
         self.chessCell = ChessCell(coord, piece)
@@ -199,6 +210,7 @@ class Cell(AnchorLayout):
 
 
 class ChessCell(ButtonBehavior, Image):
+    """A chess cell that contains chess piece, its coordinates and an image."""
     def __init__(self, coord, piece=None, **kwargs):
         super(ChessCell, self).__init__(**kwargs)
         self.size_hint = (0.7, 0.7)
@@ -208,6 +220,7 @@ class ChessCell(ButtonBehavior, Image):
         self.source = self.update_figure()
 
     def on_press(self):
+        """Coordinates the actions when a chess cell is pressed."""
         if not manager.game:
             return
         if manager.piece_select:
@@ -230,10 +243,12 @@ class ChessCell(ButtonBehavior, Image):
                 manager.show_moves()
 
     def update_figure(self):
+        """Updates the chess cell figure picture."""
         picture = self.piece.picture if self.piece else "pics/empty.png"
         return picture
 
     def get_figure(self, piece):
+        """Retrieves a chess piece object."""
         pieces = {
             "pawn": chessFigures.ChessPawn(side=piece[1]),
             "bishop": chessFigures.ChessBishop(side=piece[1]),
@@ -246,6 +261,7 @@ class ChessCell(ButtonBehavior, Image):
 
 
 class MoveCell(ButtonBehavior, Image):
+    """A chess cell that displays an available move."""
     def __init__(self, coord, **kwargs):
         super(MoveCell, self).__init__(**kwargs)
         self.source = "pics/green.png"
@@ -266,6 +282,7 @@ manager = ChessManager(game_time=None)
 
 
 class MiniChessApp(App):
+    """A class that contains the app."""
     icon = "pics/icon.png"
 
     def build(self):
